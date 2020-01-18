@@ -4,6 +4,10 @@ import cv2 as cv
 import numpy as np
 import json
 
+def showPicture(img):
+    tmp = cv.resize(img, (4608//8, 3456//8))
+    cv.imshow('test', tmp)
+
 # read input arguments (directories
 # 1. imgs
 # 2. input json
@@ -27,7 +31,6 @@ images = []
 for name in img_list:
     img = cv.imread(f'{img_dir}/{name}')
     images.append(img)
-
 # run detection algorithm
 
 
