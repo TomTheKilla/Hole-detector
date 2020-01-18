@@ -1,4 +1,5 @@
 import sys
+import os
 import cv2 as cv
 import numpy as np
 import json
@@ -21,7 +22,11 @@ with open(input_dir) as file:
     input = json.load(file)
 
 # read images
-
+img_list = os.listdir(img_dir)
+images = []
+for name in img_list:
+    img = cv.imread(f'{img_dir}/{name}')
+    images.append(img)
 
 # run detection algorithm
 
