@@ -8,13 +8,17 @@ import json
 # 2. input json
 # 3. output json
 
-img_dir = sys.argv[0]
-input_dir = sys.argv[1]
-output_dir = sys.argv[2]
+img_dir = sys.argv[1]
+input_dir = sys.argv[2]
+output_dir = sys.argv[3]
 
+# print(img_dir)
+# print(input_dir)
+# print(output_dir)
 
 # read input json
-
+with open(input_dir) as file:
+    input = json.load(file)
 
 # read images
 
