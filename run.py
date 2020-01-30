@@ -58,7 +58,10 @@ white_max = np.array([64, 255, 255], np.uint8)
 white = cv.inRange(img, white_min, white_max)
 
 showPicture(white, 'w')
-# write output json
 
+# write output json
+output_dict = dict()
+with open(output_dir, 'w+') as file:
+    output = json.dump(output_dict, file, indent=4)
 
 cv.waitKey(0)
