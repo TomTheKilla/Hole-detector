@@ -4,9 +4,11 @@ import cv2 as cv
 import numpy as np
 import json
 
-def showPicture(img):
-    tmp = cv.resize(img, (4608//8, 3456//8))
-    cv.imshow('test', tmp)
+
+def showPicture(img, i):
+    tmp = cv.resize(img, (4608 // 8, 3456 // 8))
+    cv.imshow(f'test{i}', tmp)
+
 
 # read input arguments (directories
 # 1. imgs
@@ -31,7 +33,9 @@ images = []
 for name in img_list:
     img = cv.imread(f'{img_dir}/{name}')
     images.append(img)
+
 # run detection algorithm
+img = images[0]
 img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 blue_min = np.array([106, 84, 0], np.uint8)
 blue_max = np.array([122, 255, 255], np.uint8)
@@ -52,4 +56,9 @@ gray = cv.inRange(img, gray_min, gray_max)
 white_min = np.array([34, 0, 175], np.uint8)
 white_max = np.array([64, 255, 255], np.uint8)
 white = cv.inRange(img, white_min, white_max)
+
+showPicture(white, 'w')
 # write output json
+
+
+cv.waitKey(0)
