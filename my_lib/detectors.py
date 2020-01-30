@@ -45,3 +45,19 @@ def ExtractObjectsFormFrame(test_img, medianFrame):
             extracted_objects.append(cut_object)
 
     return extracted_objects
+
+# Color definitions for later use
+blue_min = np.array([106, 84, 0], np.uint8)
+blue_max = np.array([122, 255, 255], np.uint8)
+
+yellow_min = np.array([20, 69, 167], np.uint8)
+yellow_max = np.array([63, 255, 255], np.uint8)
+
+red_min = np.array([0, 47, 0], np.uint8)
+red_max = np.array([13, 255, 255], np.uint8)
+
+gray_min = np.array([45, 3, 0], np.uint8)
+gray_max = np.array([105, 32, 141], np.uint8)
+
+white_min = np.array([34, 0, 175], np.uint8)
+white_max = np.array([64, 255, 255], np.uint8)
