@@ -3,7 +3,9 @@ import os
 import cv2 as cv
 import numpy as np
 import json
+import time
 
+from my_lib import detectors
 
 def showPicture(img, i):
     tmp = cv.resize(img, (4608 // 8, 3456 // 8))
@@ -19,9 +21,7 @@ img_dir = sys.argv[1]
 input_dir = sys.argv[2]
 output_dir = sys.argv[3]
 
-# print(img_dir)
-# print(input_dir)
-# print(output_dir)
+
 
 # read input json
 with open(input_dir) as file:
@@ -35,11 +35,16 @@ for name in img_list:
     images.append(img)
 
 # run detection algorithm
-
+frame_time = dict()                    # TEMP
+medianFrame = cv.imread('my_lib/background.jpg')
+for i, img in enumerate(images):
+    start = time.time()
+    detectors.ExtractObjectsFormFrame(img, medianFrame)
+    stop = time.time()
+    frame_time[f'{i}'] = (stop-start)
 
 # write output json
-output_dict = dict()
 with open(output_dir, 'w+') as file:
-    output = json.dump(output_dict, file, indent=4)
+    output = json.dump(frame_time, file, indent=4)
 
 cv.waitKey(0)
