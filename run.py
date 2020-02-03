@@ -42,12 +42,19 @@ for i, img in enumerate(images):
     extract = time.time()  # Time measurement
 
     circles_in_objects = []
+    blocks_in_objects = []
     for obj in objects:
         circles, test = detectors.SimpleHoughCircles(obj)
         circle_count = len(circles[0, :])
         circles_in_objects.append(circle_count)
 
+        detected_blocks = detectors.CountColouredBlocks(img)
+        blocks_in_objects.append(detected_blocks)
+
     cnt_crcls = time.time()  # Time measurement
+
+    # assign objects from input json to detected objects
+
 
     frame_time[f'{i}'] = (extract - start, cnt_crcls - extract)  # Time measurement
 

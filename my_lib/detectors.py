@@ -1,6 +1,22 @@
 import numpy as np
 import cv2 as cv
 
+# Color definitions
+blue_min = np.array([106, 84, 0], np.uint8)
+blue_max = np.array([122, 255, 255], np.uint8)
+
+yellow_min = np.array([20, 69, 167], np.uint8)
+yellow_max = np.array([63, 255, 255], np.uint8)
+
+red_min = np.array([0, 47, 0], np.uint8)
+red_max = np.array([13, 255, 255], np.uint8)
+
+gray_min = np.array([45, 3, 0], np.uint8)
+gray_max = np.array([105, 32, 141], np.uint8)
+
+white_min = np.array([34, 0, 175], np.uint8)
+white_max = np.array([64, 255, 255], np.uint8)
+
 
 def ExtractObjectsFormFrame(test_img, medianFrame):
     foreground = cv.absdiff(test_img, medianFrame)
@@ -40,7 +56,7 @@ def ExtractObjectsFormFrame(test_img, medianFrame):
 
             # Cut object form test_img with removed background
             cut_object = temp[(window[1]):(window[1] + window[3]),
-                            int(window[0]):int(window[0] + window[2]), :]
+                         int(window[0]):int(window[0] + window[2]), :]
 
             extracted_objects.append(cut_object)
 
@@ -65,18 +81,33 @@ def SimpleHoughCircles(img):
         return None
 
 
-# Color definitions for later use
-blue_min = np.array([106, 84, 0], np.uint8)
-blue_max = np.array([122, 255, 255], np.uint8)
+def CountColouredBlocks(img):
+    img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    colour_masks = [cv.inRange(img, red_min, red_max),
+                    cv.inRange(img, blue_min, blue_max),
+                    cv.inRange(img, white_min, white_max),
+                    cv.inRange(img, gray_min, gray_max),
+                    cv.inRange(img, yellow_min, yellow_max)]
 
-yellow_min = np.array([20, 69, 167], np.uint8)
-yellow_max = np.array([63, 255, 255], np.uint8)
+    colours = []
+    for colour in colour_masks:
+        hist = cv.calcHist([colour], [0], None, [256], (0, 256), accumulate=False)
 
-red_min = np.array([0, 47, 0], np.uint8)
-red_max = np.array([13, 255, 255], np.uint8)
+        if hist[255, 0] > 7500.0:
 
-gray_min = np.array([45, 3, 0], np.uint8)
-gray_max = np.array([105, 32, 141], np.uint8)
+            kernel = np.ones((3, 3), np.uint8)
+            morph = cv.morphologyEx(colour, cv.MORPH_OPEN, kernel, iterations=2)
+            contours, hierarchy = cv.findContours(morph, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+            cont_count = 0
+            for cont in contours:
+                area = cv.contourArea(cont)
+                if 5000 <= area < 150000:
+                    cont_count += 1
+                elif area > 150000:
+                    cont_count += 2
 
-white_min = np.array([34, 0, 175], np.uint8)
-white_max = np.array([64, 255, 255], np.uint8)
+            colours.append(cont_count)
+        else:
+            colours.append(0)
+
+    return colours
