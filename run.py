@@ -38,10 +38,18 @@ for name in img_list:
 frame_time = dict()                    # TEMP
 medianFrame = cv.imread('my_lib/background.jpg')
 for i, img in enumerate(images):
-    start = time.time()
-    detectors.ExtractObjectsFormFrame(img, medianFrame)
-    stop = time.time()
-    frame_time[f'{i}'] = (stop-start)
+    start = time.time()                                             # Time measurement
+    objects = detectors.ExtractObjectsFormFrame(img, medianFrame)
+    extract = time.time()                                           # Time measurement
+
+
+    for obj in objects:
+        circles, test = detectors.SimpleHoughCircles(obj)
+        circle_count = len(circles[0, :])
+
+    cnt_crcls = time.time()                                           # Time measurement
+
+    frame_time[f'{i}'] = (extract-start, cnt_crcls-extract)
 
 # write output json
 with open(output_dir, 'w+') as file:

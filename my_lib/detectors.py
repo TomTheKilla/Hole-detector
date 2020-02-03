@@ -39,12 +39,31 @@ def ExtractObjectsFormFrame(test_img, medianFrame):
             temp[shape == 0] = (0, 0, 0)
 
             # Cut object form test_img with removed background
-            cut_object = temp[(window[1]):(window[1] + window[3]), \
-                         int(window[0]):int(window[0] + window[2]), :]
+            cut_object = temp[(window[1]):(window[1] + window[3]),
+                            int(window[0]):int(window[0] + window[2]), :]
 
             extracted_objects.append(cut_object)
 
     return extracted_objects
+
+
+def SimpleHoughCircles(img):
+    img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+    circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, 75,
+                              param1=16, param2=30, minRadius=14, maxRadius=29)
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+
+        temp = img.copy()
+        for i in circles[0, :]:
+            # draw the outer circle
+            cv.circle(temp, (i[0], i[1]), i[2], (0, 255, 0), 2)
+            # draw the center of the circle
+            cv.circle(temp, (i[0], i[1]), 2, (0, 255, 0), 3)
+        return circles, temp
+    else:
+        return None
+
 
 # Color definitions for later use
 blue_min = np.array([106, 84, 0], np.uint8)
