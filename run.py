@@ -37,9 +37,9 @@ for name in img_list:
 frame_time = dict()  # Time measurement
 medianFrame = cv.imread('my_lib/background.jpg')
 for i, img in enumerate(images):
-    start = time.time()  # Time measurement
+    time_start = time.time()  # Time measurement
     objects = detectors.ExtractObjectsFormFrame(img, medianFrame)
-    extract = time.time()  # Time measurement
+    time_extract = time.time()  # Time measurement
 
     circles_in_objects = []
     blocks_in_objects = []
@@ -51,12 +51,12 @@ for i, img in enumerate(images):
         detected_blocks = detectors.CountColouredBlocks(img)
         blocks_in_objects.append(detected_blocks)
 
-    cnt_crcls = time.time()  # Time measurement
+    time_descript = time.time()  # Time measurement
 
     # assign objects from input json to detected objects
 
 
-    frame_time[f'{i}'] = (extract - start, cnt_crcls - extract)  # Time measurement
+    frame_time[f'{i}'] = (time_extract - time_start, time_descript - time_extract)  # Time measurement
 
 # write output json
 with open(output_dir, 'w+') as file:
