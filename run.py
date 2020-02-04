@@ -51,12 +51,14 @@ for i, img in enumerate(images):
         detected_blocks = detectors.CountColouredBlocks(img)
         blocks_in_objects.append(detected_blocks)
 
-    time_descript = time.time()  # Time measurement
+    time_describe = time.time()  # Time measurement
 
     # assign objects from input json to detected objects
 
-
-    frame_time[f'{i}'] = (time_extract - time_start, time_descript - time_extract)  # Time measurement
+    time_assign = time.time()
+    frame_time[f'{i}'] = (time_extract - time_start,
+                          time_describe - time_extract,
+                          time_assign - time_describe)  # Time measurement
 
 # write output json
 with open(output_dir, 'w+') as file:
