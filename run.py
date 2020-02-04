@@ -54,6 +54,7 @@ for i, img in enumerate(images):
     time_describe = time.time()  # Time measurement
 
     # assign objects from input json to detected objects
+    for i in
 
     time_assign = time.time()
     frame_time[f'{i}'] = (time_extract - time_start,

@@ -110,4 +110,11 @@ def CountColouredBlocks(img):
         else:
             colours.append(0)
 
-    return colours
+    blocks = {
+        'red': colours[0],
+        'blue': colours[1],
+        'white': colours[2],
+        'grey': colours[3],
+        'yellow': colours[4],
+    }
+    return blocks
