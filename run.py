@@ -66,11 +66,12 @@ for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
     input_data = input_block_count.get('img_001')  # TODO: get data from json
     if len(input_data) == len(blocks_in_objects):
         gate_matrix = np.zeros((len(input_data), len(input_data)), bool)
+
         for input_n, input in enumerate(input_data):
             for detected_n, detected in enumerate(blocks_in_objects):
-                # cv.imshow('test', objects[detected_n])
-                # cv.waitKey(0)
                 possible = False
+
+                # For each colour check if there were any blocks detected
                 for colour in Colours:
                     current_colour = colour.name
                     if int(input.get(current_colour)) >= detected.get(current_colour):
@@ -81,6 +82,35 @@ for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
 
                 gate_matrix[input_n, detected_n] = possible
 
+
+        confirmed_matches = [None] * len(input_data)
+        were_changes_made = True
+        while(were_changes_made):
+            were_changes_made = False
+            for input_n in range(len(input_data)):
+                number_of_matches = 0
+                last_possible_match = 1000
+                for detected_n in range(len(blocks_in_objects)):
+                    if gate_matrix[input_n, detected_n]:
+                        number_of_matches += 1
+                        last_possible_match = detected_n
+
+
+                if number_of_matches == 0 and confirmed_matches[input_n] is None:
+                    raise Exception(f'No matches found for {input_n + 1}. object!')  # TODO handle exeption
+
+                elif number_of_matches == 1:
+                    confirmed_matches[input_n] = last_possible_match
+                    gate_matrix[input_n, :] = False
+                    gate_matrix[:, last_possible_match] = False
+                    were_changes_made = True
+                else:
+                    pass
+
+    else:
+        raise Exception('Wrong number of objects detected!')
+
+
     time_assign = time.time()
     frame_time[f'{i}'] = (time_extract - time_start,
                           time_describe - time_extract,
@@ -89,6 +119,3 @@ for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
 # write output json
 with open(output_dir, 'w+') as file:
     output = json.dump(frame_time, file, indent=4)
-
-
-
