@@ -14,8 +14,8 @@ red_max = np.array([13, 255, 255], np.uint8)
 gray_min = np.array([45, 3, 0], np.uint8)
 gray_max = np.array([105, 32, 141], np.uint8)
 
-white_min = np.array([34, 0, 175], np.uint8)
-white_max = np.array([64, 255, 255], np.uint8)
+white_min = np.array([38, 6, 181], np.uint8)
+white_max = np.array([80, 45, 228], np.uint8)
 
 
 def ExtractObjectsFormFrame(test_img, medianFrame):
@@ -96,15 +96,21 @@ def CountColouredBlocks(img):
         if hist[255, 0] > 7500.0:
 
             kernel = np.ones((3, 3), np.uint8)
-            morph = cv.morphologyEx(colour, cv.MORPH_OPEN, kernel, iterations=2)
+            morph = cv.morphologyEx(colour, cv.MORPH_OPEN, kernel, iterations=0)
             contours, hierarchy = cv.findContours(morph, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
             cont_count = 0
             for cont in contours:
                 area = cv.contourArea(cont)
                 if 5000 <= area < 150000:
+                    cv.drawContours(colour, [cont], -1, (127), cv.FILLED)
                     cont_count += 1
                 elif area > 150000:
+                    cv.drawContours(colour, [cont], -1, (127), cv.FILLED)
                     cont_count += 2
+
+            # bw = cv.resize(colour, (0, 0), fx=1/2, fy=1/2)
+            # cv.imshow('test2', bw)
+            # cv.waitKey(0)
 
             colours.append(cont_count)
         else:
