@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from enum import Enum
 
 
 class GroupOfBlocks:
@@ -13,3 +14,9 @@ class GroupOfBlocks:
         self.place_in_order = None
 
 
+class Colours(Enum):
+    red = 0
+    blue = 1
+    white = 2
+    grey = 3
+    yellow = 4
