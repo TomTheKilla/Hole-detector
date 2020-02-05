@@ -37,7 +37,8 @@ def AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirme
                     last_possible_match = detected_n
 
             if number_of_matches == 0 and confirmed_matches[input_n] is None:
-                raise Exception(f'No matches found for {input_n + 1}. object!')  # TODO handle exeption
+                pass
+                # raise Exception(f'No matches found for {input_n + 1}. object!')  # TODO handle exeption
 
 
             elif number_of_matches == 1:
@@ -48,7 +49,7 @@ def AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirme
             else:
                 pass
 
-    return confirmed_matches
+    return confirmed_matches, gate_matrix
 
 
 def AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirmed_matches):
@@ -77,7 +78,46 @@ def AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirme
             else:
                 pass
 
-    return confirmed_matches
+    return confirmed_matches, gate_matrix
+
+
+def FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches):
+    # find all descriptions that hasn't been assigned yet
+    positions_of_descriptions = [i for i, x in enumerate(confirmed_matches) if x is None]
+
+    # for every not assigned description find which objects compete for it
+    competing_objects = []
+    for pos in positions_of_descriptions:
+        competing_objects.append([i for i, x in enumerate(gate_matrix[pos, :]) if x is True])
+
+    # # find with which objects and for what description are competing
+    # contests = []
+    # for i, contestant_a in enumerate(competing_objects):
+    #     for j, contestant_b in enumerate(competing_objects):
+    #         if i != j:
+    #             descriptions = list(set(contestant_a).intersection(contestant_b))
+    #             if len(descriptions) != 0:
+    #                 contest = [descriptions, i, j]
+    #                 contests.append(contest)
+    #         else:
+    #             # object can't compete with itself
+    #             continue
+
+    #
+    n_multiway_contest = 0
+    for n_description, contest in enumerate(competing_objects):
+        if len(contest) == 2:
+            description = mentioned_blocks[positions_of_descriptions[n_description]]
+
+
+        if len(contest) >2:
+            n_multiway_contest += 1
+            continue
+
+        else:
+            print('Not supposed to happen!')    # TODO handle this
+
+    return confirmed_matches, gate_matrix
 
 
 def AssignAll(img_name, mentioned_blocks, objects):
@@ -86,16 +126,25 @@ def AssignAll(img_name, mentioned_blocks, objects):
         gate_matrix = CheckPossibilities(mentioned_blocks, objects)
 
         confirmed_matches = [None] * len(mentioned_blocks)
-        confirmed_matches = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirmed_matches)
+        confirmed_matches, gate_matrix = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix,
+                                                                     confirmed_matches)
         if None in confirmed_matches:
-            confirmed_matches = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirmed_matches)
+            confirmed_matches, gate_matrix = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix,
+                                                                         confirmed_matches)
         else:
             return confirmed_matches
+
+        # if None in confirmed_matches:
+        #     confirmed_matches, gate_matrix = FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches)
+        # else:
+        #     return confirmed_matches
 
         if None in confirmed_matches:  # TODO: handle exeption
             # for i, obj in enumerate(objects):
             #     cv.imwrite(f'D:/Studia/SiSW/Problems/{i}.jpg', obj.img)
             #     print(obj.blocks)
+
+            return None
             raise Exception(f'No matching object found in {img_name}!')
 
         else:
