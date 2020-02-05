@@ -42,10 +42,19 @@ for name in img_list:
     img = cv.imread(f'{img_dir}/{name}')
     images.append(img)
 
+# Create output dictionary
+output_dict = dict.fromkeys(input_block_count.keys())
+
+
 # run detection algorithm
+
 frame_time = dict()  # Time measurement
+
+# Read median background
 medianFrame = cv.imread('my_lib/background.jpg')
 for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
+
+
     time_start = time.time()  # Time measurement
     objects = detectors.ExtractObjectsFormFrame(img, medianFrame)
     time_extract = time.time()  # Time measurement
@@ -108,10 +117,21 @@ for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
                     pass
 
     else:
-        raise Exception('Wrong number of objects detected!')
+        raise Exception('Wrong number of objects detected!')        # TODO: handle exception
 
+    #  TODO: remove after testing
+    for i, match in enumerate(confirmed_matches):
+        img = cv.imread(f'C:/Users/tomth/.PyCharmCE2019.3/config/scratches/Test/{confirmed_matches[i]+1}.jpg')
+        print(input_data[i])
+        img = cv.resize(img, (0, 0), fx=1/4, fy=1/4)
+        cv.imshow('match', img)
+        cv.waitKey(0)
 
     time_assign = time.time()
+
+
+
+
     frame_time[f'{i}'] = (time_extract - time_start,
                           time_describe - time_extract,
                           time_assign - time_describe)  # Time measurement

@@ -49,7 +49,7 @@ def ExtractObjectsFormFrame(test_img, medianFrame):
             bbox = cv.minAreaRect(cont)
             box = cv.boxPoints(bbox)
             box = np.intp(box)
-            cv.drawContours(shape, [box], 0, (255), cv.FILLED)
+            cv.drawContours(shape, [box], 0, (255), cv.FILLED)  # TODO: remove after testing
 
             # Mask unnecessary parts of the image
             temp[shape == 0] = (0, 0, 0)
