@@ -86,8 +86,12 @@ for img_name, mentioned_blocks in input_block_count.items():
 
     # update_output_dict
     sorted_hole_count = []
-    for match in confirmed_matches:
-        sorted_hole_count.append(objects[match].n_holes)
+    if confirmed_matches is None:
+        print(f'Zeroes for objects in {img_name}!')
+        sorted_hole_count.append(np.zeros(len(mentioned_blocks)))
+    else:
+        for match in confirmed_matches:
+            sorted_hole_count.append(objects[match].n_holes)
 
     output_dict[img_name] = sorted_hole_count
     print(f'Finnished processing {img_name}.jpg!')

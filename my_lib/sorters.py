@@ -104,3 +104,4 @@ def AssignAll(img_name, mentioned_blocks, objects):
     else:
         missing_blocks = len(mentioned_blocks) - len(objects)
         print(f'{missing_blocks} blocks not detected in {img_name}.jpg!')  # TODO: handle exception
+        return None
