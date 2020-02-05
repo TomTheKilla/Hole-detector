@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+from my_lib.types import GroupOfBlocks
 
 # Color definitions
 blue_min = np.array([106, 84, 0], np.uint8)
@@ -18,10 +19,8 @@ white_min = np.array([38, 6, 181], np.uint8)
 white_max = np.array([80, 45, 228], np.uint8)
 
 
-def ExtractObjectsFormFrame(test_img, medianFrame):
+def ExtractObjectsFormFrame(img_name, test_img, medianFrame):
     foreground = cv.absdiff(test_img, medianFrame)
-    # out = cv.resize(foreground, (0,0), fx=1/8, fy=1/8)
-    # cv.imshow('foreground', out)
 
     gray_f = cv.cvtColor(foreground, cv.COLOR_BGR2GRAY)
     gray_f_blur = cv.GaussianBlur(gray_f, (3, 3), cv.BORDER_DEFAULT)
@@ -36,6 +35,7 @@ def ExtractObjectsFormFrame(test_img, medianFrame):
     extracted_objects = []
     for cont in contours:
         if cv.contourArea(cont) >= 30000:
+            
             shape = mask.copy()
             temp = test_img.copy()
             # cv.drawContours(shape, [cont], -1, (255), cv.FILLED)
@@ -49,7 +49,7 @@ def ExtractObjectsFormFrame(test_img, medianFrame):
             bbox = cv.minAreaRect(cont)
             box = cv.boxPoints(bbox)
             box = np.intp(box)
-            cv.drawContours(shape, [box], 0, (255), cv.FILLED)  # TODO: remove after testing
+            cv.drawContours(shape, [box], 0, (255), cv.FILLED)
 
             # Mask unnecessary parts of the image
             temp[shape == 0] = (0, 0, 0)
@@ -58,8 +58,8 @@ def ExtractObjectsFormFrame(test_img, medianFrame):
             cut_object = temp[(window[1]):(window[1] + window[3]),
                          int(window[0]):int(window[0] + window[2]), :]
 
-            extracted_objects.append(cut_object)
-
+            obj = GroupOfBlocks(img_name, cut_object, box, window)
+            extracted_objects.append(obj)
     return extracted_objects
 
 
