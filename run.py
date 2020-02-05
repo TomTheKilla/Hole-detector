@@ -4,17 +4,13 @@ import cv2 as cv
 import numpy as np
 import json
 import time
-from enum import Enum
 
 from my_lib import detectors
+from my_lib import sorters
+from my_lib.types import GroupOfBlocks
 
 
-class Colours(Enum):
-    red = 0
-    blue = 1
-    white = 2
-    grey = 3
-    yellow = 4
+
 
 
 def showPicture(img, i):
@@ -26,7 +22,7 @@ def showPicture(img, i):
 # 1. imgs
 # 2. input json
 # 3. output json
-
+            # TODO: handle / and \ in paths
 img_dir = sys.argv[1]
 input_dir = sys.argv[2]
 output_dir = sys.argv[3]
@@ -45,7 +41,6 @@ with open(input_dir) as file:
 # Create output dictionary
 output_dict = dict.fromkeys(input_block_count.keys())
 
-
 # run detection algorithm
 frame_time = dict()  # Time measurement
 
@@ -59,85 +54,47 @@ for img_name, mentioned_blocks in input_block_count.items():
     img = cv.imread(f'{img_dir}/{img_name}.jpg')
 
     time_start = time.time()  # Time measurement
-    objects = detectors.ExtractObjectsFormFrame(img, medianFrame)
+    objects = detectors.ExtractObjectsFormFrame(img_name, img, medianFrame)
     time_extract = time.time()  # Time measurement
 
-    circles_in_objects = []
-    blocks_in_objects = []
     for obj in objects:
-        circles, test = detectors.SimpleHoughCircles(obj)
+        circles, test = detectors.SimpleHoughCircles(obj.img)
         circle_count = len(circles[0, :])
-        circles_in_objects.append(circle_count)
+        obj.n_holes = circle_count
 
-        detected_blocks = detectors.CountColouredBlocks(obj)
-        blocks_in_objects.append(detected_blocks)
+        detected_blocks = detectors.CountColouredBlocks(obj.img)
+        obj.blocks = detected_blocks
 
     time_describe = time.time()  # Time measurement
 
     # Assign objects from input json to detected objects
-    if len(mentioned_blocks) == len(blocks_in_objects):
-        gate_matrix = np.zeros((len(mentioned_blocks), len(mentioned_blocks)), bool)
+    confirmed_matches = sorters.AssignAll(img_name, mentioned_blocks, objects)
 
-        for input_n, input in enumerate(mentioned_blocks):
-            for detected_n, detected in enumerate(blocks_in_objects):
-                possible = False
-
-                # For each colour check if there were any blocks detected
-                for colour in Colours:
-                    current_colour = colour.name
-                    if int(input.get(current_colour)) >= detected.get(current_colour):
-                        possible = True
-                    else:
-                        possible = False
-                        break
-
-                gate_matrix[input_n, detected_n] = possible
-
-
-        confirmed_matches = [None] * len(mentioned_blocks)
-        were_changes_made = True
-        while(were_changes_made):
-            were_changes_made = False
-            for input_n in range(len(mentioned_blocks)):
-                number_of_matches = 0
-                last_possible_match = 1000
-                for detected_n in range(len(blocks_in_objects)):
-                    if gate_matrix[input_n, detected_n]:
-                        number_of_matches += 1
-                        last_possible_match = detected_n
-
-
-                if number_of_matches == 0 and confirmed_matches[input_n] is None:
-                    raise Exception(f'No matches found for {input_n + 1}. object!')  # TODO handle exeption
-
-                elif number_of_matches == 1:
-                    confirmed_matches[input_n] = last_possible_match
-                    gate_matrix[input_n, :] = False
-                    gate_matrix[:, last_possible_match] = False
-                    were_changes_made = True
-                else:
-                    pass
-
-    else:
-        raise Exception('Wrong number of objects detected!')        # TODO: handle exception
-
-    #  TODO: remove after testing
-    for i, match in enumerate(confirmed_matches):
-        img = cv.imread(f'C:/Users/tomth/.PyCharmCE2019.3/config/scratches/Test/{confirmed_matches[i]+1}.jpg')
-        print(mentioned_blocks[i])
-        img = cv.resize(img, (0, 0), fx=1/4, fy=1/4)
-        cv.imshow('match', img)
-        cv.waitKey(0)
+    # #  TODO: remove after testing
+    # for i, match in enumerate(confirmed_matches):
+    #     print(f'Input: {mentioned_blocks[i]}')
+    #
+    #     img = cv.resize(objects[confirmed_matches[i]].img, (0, 0), fx=1/4, fy=1/4)
+    #     cv.imshow('match', img)
+    #     cv.waitKey(0)
 
     time_assign = time.time()
 
+    frame_time[img_name] = (time_extract - time_start,
+                            time_describe - time_extract,
+                            time_assign - time_describe)  # Time measurement
 
+    # update_output_dict
+    sorted_hole_count = []
+    for match in confirmed_matches:
+        sorted_hole_count.append(objects[match].n_holes)
 
-
-    frame_time[f'{i}'] = (time_extract - time_start,
-                          time_describe - time_extract,
-                          time_assign - time_describe)  # Time measurement
+    output_dict[img_name] = sorted_hole_count
+    print(f'Finnished processing {img_name}.jpg!')
 
 # write output json
 with open(output_dir, 'w+') as file:
+    output = json.dump(output_dict, file, indent=4)
+
+with open('time_log.json', 'w+') as file:
     output = json.dump(frame_time, file, indent=4)
