@@ -88,7 +88,8 @@ for img_name, mentioned_blocks in input_block_count.items():
     sorted_hole_count = []
     if confirmed_matches is None:
         print(f'Zeroes for objects in {img_name}!')
-        sorted_hole_count.append(np.zeros(len(mentioned_blocks)))
+        for i in range(len(mentioned_blocks)):
+            sorted_hole_count.append(0)    # TODO replace with something sensible
     else:
         for match in confirmed_matches:
             sorted_hole_count.append(objects[match].n_holes)
