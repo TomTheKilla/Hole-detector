@@ -35,25 +35,28 @@ output_dir = sys.argv[3]
 with open(input_dir) as file:
     input_block_count = json.load(file)
 
-# read images
-img_list = os.listdir(img_dir)
-images = []
-for name in img_list:
-    img = cv.imread(f'{img_dir}/{name}')
-    images.append(img)
+# # read images
+# img_list = os.listdir(img_dir)
+# images = []
+# for name in img_list:
+#     img = cv.imread(f'{img_dir}/{name}')
+#     images.append(img)
 
 # Create output dictionary
 output_dict = dict.fromkeys(input_block_count.keys())
 
 
 # run detection algorithm
-
 frame_time = dict()  # Time measurement
 
 # Read median background
 medianFrame = cv.imread('my_lib/background.jpg')
-for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
 
+# Iterate over every photo mentioned in input.json
+for img_name, mentioned_blocks in input_block_count.items():
+
+    # Read image
+    img = cv.imread(f'{img_dir}/{img_name}.jpg')
 
     time_start = time.time()  # Time measurement
     objects = detectors.ExtractObjectsFormFrame(img, medianFrame)
@@ -71,12 +74,11 @@ for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
 
     time_describe = time.time()  # Time measurement
 
-    # assign objects from input json to detected objects
-    input_data = input_block_count.get('img_001')  # TODO: get data from json
-    if len(input_data) == len(blocks_in_objects):
-        gate_matrix = np.zeros((len(input_data), len(input_data)), bool)
+    # Assign objects from input json to detected objects
+    if len(mentioned_blocks) == len(blocks_in_objects):
+        gate_matrix = np.zeros((len(mentioned_blocks), len(mentioned_blocks)), bool)
 
-        for input_n, input in enumerate(input_data):
+        for input_n, input in enumerate(mentioned_blocks):
             for detected_n, detected in enumerate(blocks_in_objects):
                 possible = False
 
@@ -92,11 +94,11 @@ for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
                 gate_matrix[input_n, detected_n] = possible
 
 
-        confirmed_matches = [None] * len(input_data)
+        confirmed_matches = [None] * len(mentioned_blocks)
         were_changes_made = True
         while(were_changes_made):
             were_changes_made = False
-            for input_n in range(len(input_data)):
+            for input_n in range(len(mentioned_blocks)):
                 number_of_matches = 0
                 last_possible_match = 1000
                 for detected_n in range(len(blocks_in_objects)):
@@ -122,7 +124,7 @@ for i, img in enumerate(images[:1]):  # TODO: iterate over every photo
     #  TODO: remove after testing
     for i, match in enumerate(confirmed_matches):
         img = cv.imread(f'C:/Users/tomth/.PyCharmCE2019.3/config/scratches/Test/{confirmed_matches[i]+1}.jpg')
-        print(input_data[i])
+        print(mentioned_blocks[i])
         img = cv.resize(img, (0, 0), fx=1/4, fy=1/4)
         cv.imshow('match', img)
         cv.waitKey(0)
