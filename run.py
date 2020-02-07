@@ -50,6 +50,11 @@ medianFrame = cv.imread('my_lib/background.jpg')
 # Iterate over every photo mentioned in input.json
 for img_name, mentioned_blocks in input_block_count.items():
 
+    #TODO remve after tests!!!!
+    if img_name != 'img_007':
+        continue
+
+
     # Read image
     img = cv.imread(f'{img_dir}/{img_name}.jpg')
 
@@ -62,21 +67,14 @@ for img_name, mentioned_blocks in input_block_count.items():
         circle_count = len(circles[0, :])
         obj.n_holes = circle_count
 
-        detected_blocks = detectors.CountColouredBlocks(obj.img)
+        detected_blocks, colour_masks = detectors.CountColouredBlocks(obj.img)
         obj.blocks = detected_blocks
+        obj.colour_masks = colour_masks
 
     time_describe = time.time()  # Time measurement
 
     # Assign objects from input json to detected objects
-    confirmed_matches = sorters.AssignAll(img_name, mentioned_blocks, objects)
-
-    # #  TODO: remove after testing
-    # for i, match in enumerate(confirmed_matches):
-    #     print(f'Input: {mentioned_blocks[i]}')
-    #
-    #     img = cv.resize(objects[confirmed_matches[i]].img, (0, 0), fx=1/4, fy=1/4)
-    #     cv.imshow('match', img)
-    #     cv.waitKey(0)
+    confirmed_matches = sorters.Assign(img_name, mentioned_blocks, objects)
 
     time_assign = time.time()
 

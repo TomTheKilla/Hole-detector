@@ -58,7 +58,9 @@ def ExtractObjectsFormFrame(img_name, test_img, medianFrame):
             cut_object = temp[(window[1]):(window[1] + window[3]),
                          int(window[0]):int(window[0] + window[2]), :]
 
-            obj = GroupOfBlocks(img_name, cut_object, box, window)
+            area = window[3]*window[2]
+
+            obj = GroupOfBlocks(img_name, cut_object, box, window, area)
             extracted_objects.append(obj)
     return extracted_objects
 
@@ -123,4 +125,4 @@ def CountColouredBlocks(img):
         'grey': colours[3],
         'yellow': colours[4],
     }
-    return blocks
+    return blocks, colour_masks # TODO: don't draw on masks
