@@ -1,4 +1,5 @@
 import numpy as np
+import cv2  as cv
 from my_lib.types import GroupOfBlocks
 from my_lib.types import Colours
 
@@ -31,7 +32,7 @@ def AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirme
         were_changes_made = False
         # TODO do it only for blocks containing True
         for input_n in range(len(mentioned_blocks)):
-            if not (True in gate_matrix[input_n,:]):
+            if not (True in gate_matrix[input_n, :]):
                 if confirmed_matches[input_n] is None:
                     if input_n not in not_matched_descriptions:
                         not_matched_descriptions.append(input_n)
@@ -100,7 +101,7 @@ def AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirme
     return confirmed_matches, gate_matrix
 
 
-def FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches):
+def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches):
     # find all descriptions that hasn't been assigned yet
     not_assigned_descriptions = [i for i, x in enumerate(confirmed_matches) if x is None]
 
@@ -109,115 +110,154 @@ def FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches):
     for pos in not_assigned_descriptions:
         competing_objects.append([i for i, x in enumerate(gate_matrix[pos, :]) if x])
 
+    possible_descriptions_for_objects = []
+    for pos in range(len(objects)):
+        possible = [i for i, x in enumerate(gate_matrix[:, pos]) if x]
+        possible_descriptions_for_objects.append(possible)
+
     for competition, n_description in enumerate(not_assigned_descriptions):
         description = mentioned_blocks[n_description]
-        competitors = competing_objects[competition] # TODO remove identical cometitions after
+        competitors = competing_objects[competition]  # TODO remove identical cometitions after
 
+        # Find single competing description
+        descriptions = possible_descriptions_for_objects[competitors[0]]
+        for desc in descriptions:
+            if desc != description:
+                competing_description = mentioned_blocks[desc]
         n_of_blocks_in_description = []
         for colour in Colours:
             n = int(description[colour.name])
-            pass
             n_of_blocks_in_description.append(n)
 
-        colours_present = [i for i, x in enumerate(n_of_blocks_in_description) if (x != 0)]
-        if len(colours_present) == 1:
-            target_colour = Colours(colours_present[0])
-            leader = None
-            top_area_ratio = 0.0
-            for pos, competitor in enumerate(competitors):
-                # find area of object
-                obj_area = objects[competitor].total_area
-                # find area of target colour
-                colour_area = objects[competitor].ColourArea(target_colour)
-                # compare with previous
-                ratio = colour_area / obj_area
-                if top_area_ratio < ratio:
-                    leader = pos
-                    top_area_ratio = ratio
+        description_colours_present = [i for i, x in enumerate(n_of_blocks_in_description) if (x != 0)]
 
-            if leader is not None:
-                # treat leader as confirmed match for given description
-                confirmed_matches[n_description] = competitors[leader]
+        n_of_blocks_in_competing_description = []
+        for colour in Colours:
+            n = int(competing_description[colour.name])
+            n_of_blocks_in_competing_description.append(n)
 
-                # update gate_matrix
-                gate_matrix[n_description, :] = False
-                gate_matrix[:, competitors[leader]] = False
+        competing_description_colours_present = [i for i, x in enumerate(n_of_blocks_in_competing_description) if
+                                                 (x != 0)]
 
-                # check if rest of the objects can be assigned
-                confirmed_matches, gate_matrix = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix,
+        # Find differences between descriptions
+        missing_colours_from_description = [item for item in competing_description_colours_present if
+                                            item not in description_colours_present]
+        additional_colours_in_description = [item for item in description_colours_present if
+                                             item not in competing_description_colours_present]
+
+        # Select colour to look for in images that would differentiate them
+        if len(missing_colours_from_description) != 0:
+            target_colour = Colours(missing_colours_from_description[0])
+        elif len(additional_colours_in_description) != 0:
+            target_colour = Colours(additional_colours_in_description[0])
+        else:
+            # Can't find solution    # TODO Pick colour that has the biggest difference in number of blocks
+            return confirmed_matches, gate_matrix
+
+        competitors_colours_present = []
+        # for competitor in competitors:
+        #     n_of_blocks_in_competitor = []
+        #     for colour in Colours:
+        #         n = int(objects[competitor].blocks[colour.name])
+        #         n_of_blocks_in_competitor.append(n)
+        #     blocks = [i for i, x in enumerate(n_of_blocks_in_competitor) if (x != 0)]
+        #     if blocks not in competitors_colours_present:
+        #         competitors_colours_present.append(blocks)
+        #
+        # if len(competitors_colours_present) == 1 and competitors_colours_present[0] == description_colours_present:
+        #     continue  # TODO: catch that at the end in case it happens every loop
+
+        leader = None
+        top_area_ratio = 0.0
+        for pos, competitor in enumerate(competitors):
+            # find area of object
+            obj_area = objects[competitor].total_area
+            # find area of target colour
+            colour_area = objects[competitor].ColourArea(target_colour)
+            # compare with previous
+            ratio = colour_area / obj_area
+            if top_area_ratio < ratio:
+                leader = pos
+                top_area_ratio = ratio
+
+        if leader is not None:
+            # treat leader as confirmed match for given description
+            confirmed_matches[n_description] = competitors[leader]
+
+            # update gate_matrix
+            gate_matrix[n_description, :] = False
+            gate_matrix[:, competitors[leader]] = False
+
+            # TODO if one none it should be straigh forward but the next function should do
+
+            # check if rest of the objects can be assigned
+            confirmed_matches, gate_matrix = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix,
+                                                                         confirmed_matches)
+
+            if None in confirmed_matches:
+                confirmed_matches, gate_matrix = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix,
                                                                              confirmed_matches)
-
-                # TODO if one none it's easy
-
-                if None in confirmed_matches:
-                    confirmed_matches, gate_matrix = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix,
-                                                                                 confirmed_matches)
-                else:
-                    return confirmed_matches
-
             else:
-                # TODO handle
-                pass
+                return confirmed_matches
 
         else:
             # TODO handle
             pass
 
-    # find all objects with out matching description
-    not_assigned_objects = [i for i, x in enumerate(objects) if x.description is None]
-
-    n_multiway_contest = 0
-    for n_description, contest in enumerate(competing_objects):
-        if len(contest) == 2:
-            description = mentioned_blocks[not_assigned_descriptions[n_description]]
-            object_a = objects[contest[0]]
-            object_b = objects[contest[1]]
-
-            # Find the difference between descriptions
-            for colour in Colours:
-                pass
-
-        elif len(contest) > 2:
-            n_multiway_contest += 1
-            continue
-
-        else:
-            print('Not supposed to happen!')  # TODO handle this
-
     return confirmed_matches, gate_matrix
 
 
+# # find all objects with out matching description
+# not_assigned_objects = [i for i, x in enumerate(objects) if x.description is None]
+#
+# n_multiway_contest = 0
+# for n_description, contest in enumerate(competing_objects):
+#     if len(contest) == 2:
+#         description = mentioned_blocks[not_assigned_descriptions[n_description]]
+#         object_a = objects[contest[0]]
+#         object_b = objects[contest[1]]
+#
+#         # Find the difference between descriptions
+#         for colour in Colours:
+#             pass
+#
+#     elif len(contest) > 2:
+#         n_multiway_contest += 1
+#         continue
+#
+#     else:
+#         print('Not supposed to happen!')  # TODO handle this
+
+
 def Assign(img_name, mentioned_blocks, objects):
-    if len(mentioned_blocks) == len(objects):
+    if len(mentioned_blocks) > len(objects):
+        return None
+    # TODO: find missing objects
+    elif len(mentioned_blocks) < len(objects):
+        return None
 
-        gate_matrix = CheckPossibilities(mentioned_blocks, objects)
 
-        confirmed_matches = [None] * len(mentioned_blocks)
-        confirmed_matches, gate_matrix = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix,
+    gate_matrix = CheckPossibilities(mentioned_blocks, objects)
+
+    confirmed_matches = [None] * len(mentioned_blocks)
+    confirmed_matches, gate_matrix = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix,
+                                                                 confirmed_matches)
+    if None in confirmed_matches:
+        confirmed_matches, gate_matrix = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix,
                                                                      confirmed_matches)
-        if None in confirmed_matches:
-            confirmed_matches, gate_matrix = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix,
-                                                                         confirmed_matches)
-        else:
-            return confirmed_matches
-
-        if None in confirmed_matches:
-            confirmed_matches = FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches)
-        else:
-            return confirmed_matches
-
-        if None in confirmed_matches:  # TODO: handle exeption
-            # for i, obj in enumerate(objects):
-            #     cv.imwrite(f'D:/Studia/SiSW/Problems/{i}.jpg', obj.img)
-            #     print(obj.blocks)
-            raise Exception(f'No matching object found in {img_name}!')
-
-        else:
-            return confirmed_matches
-
-    elif len(mentioned_blocks) > len(objects):
-        return None
-        # TODO: find missing objects
     else:
-        # TODO: remove false positive
-        return None
+        return confirmed_matches
+
+    if None in confirmed_matches:
+        confirmed_matches = DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
+    else:
+        return confirmed_matches
+
+    if None in confirmed_matches:  # TODO: handle exeption
+        # for i, obj in enumerate(objects):
+        #     cv.imwrite(f'D:/Studia/SiSW/Problems/{i}.jpg', obj.img)
+        #     print(obj.blocks)
+        raise Exception(f'No matching object found in {img_name}!')
+
+    else:
+        return confirmed_matches
