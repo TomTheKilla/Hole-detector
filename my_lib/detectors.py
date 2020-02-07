@@ -92,7 +92,8 @@ def CountColouredBlocks(img):
                     cv.inRange(img, yellow_min, yellow_max)]
 
     colours = []
-    for colour in colour_masks:
+    for mask in colour_masks:
+        colour = mask.copy()
         hist = cv.calcHist([colour], [0], None, [256], (0, 256), accumulate=False)
 
         if hist[255, 0] > 7500.0:
@@ -125,4 +126,4 @@ def CountColouredBlocks(img):
         'grey': colours[3],
         'yellow': colours[4],
     }
-    return blocks, colour_masks # TODO: don't draw on masks
+    return blocks, colour_masks
