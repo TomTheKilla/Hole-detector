@@ -26,10 +26,16 @@ def CheckPossibilities(mentioned_blocks, objects):
 
 def AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirmed_matches):
     were_changes_made = True
-    non_matched_descriptions = []
+    not_matched_descriptions = []
     while (were_changes_made):
         were_changes_made = False
+        # TODO do it only for blocks containing True
         for input_n in range(len(mentioned_blocks)):
+            if not (True in gate_matrix[input_n,:]):
+                if confirmed_matches[input_n] is None:
+                    if input_n not in not_matched_descriptions:
+                        not_matched_descriptions.append(input_n)
+                continue
             number_of_matches = 0
             last_possible_match = 1000
             for detected_n in range(len(objects)):
@@ -37,11 +43,7 @@ def AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirme
                     number_of_matches += 1
                     last_possible_match = detected_n
 
-            if number_of_matches == 0 and confirmed_matches[input_n] is None:
-                pass
-                # TODO: make possible for unmatched objects
-
-            elif number_of_matches == 1:
+            if number_of_matches == 1:
                 confirmed_matches[input_n] = last_possible_match
                 objects[last_possible_match].description = input_n
                 gate_matrix[input_n, :] = False  # TODO:Remove
@@ -50,15 +52,24 @@ def AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirme
             else:
                 pass
 
+    if len(not_matched_descriptions) == 1:
+        descript = not_matched_descriptions[0]
+        [obj] = [n_obj for n_obj in range(len(objects)) if n_obj not in confirmed_matches]
+        confirmed_matches[descript] = obj
+
     return confirmed_matches, gate_matrix
 
 
 def AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirmed_matches):
     were_changes_made = True
+    not_matched_objects = []
     while (were_changes_made):
         were_changes_made = False
         for detected_n in range(len(objects)):
             if not (True in gate_matrix[:, detected_n]):
+                if detected_n not in confirmed_matches:
+                    if detected_n not in not_matched_objects:
+                        not_matched_objects.append(detected_n)
                 continue
             number_of_matches = 0
             last_possible_match = 1000
@@ -74,12 +85,17 @@ def AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirme
 
             elif number_of_matches == 1:
                 confirmed_matches[last_possible_match] = detected_n
-                objects[detected_n] = last_possible_match
+                objects[detected_n].description = last_possible_match
                 gate_matrix[last_possible_match, :] = False
                 gate_matrix[:, detected_n] = False  # TODO: remove
                 were_changes_made = True
             else:
                 pass
+
+        if len(not_matched_objects) == 1:
+            obj = not_matched_objects[0]
+            [descript] = [i for i, x in enumerate(confirmed_matches) if x is None]
+            confirmed_matches[descript] = obj
 
     return confirmed_matches, gate_matrix
 
@@ -93,9 +109,9 @@ def FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches):
     for pos in not_assigned_descriptions:
         competing_objects.append([i for i, x in enumerate(gate_matrix[pos, :]) if x])
 
-    for n_description in not_assigned_descriptions:
+    for competition, n_description in enumerate(not_assigned_descriptions):
         description = mentioned_blocks[n_description]
-        competitors = competing_objects[n_description]
+        competitors = competing_objects[competition] # TODO remove identical cometitions after
 
         n_of_blocks_in_description = []
         for colour in Colours:
@@ -121,15 +137,18 @@ def FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches):
 
             if leader is not None:
                 # treat leader as confirmed match for given description
-                confirmed_matches[not_assigned_descriptions[n_description]] = competitors[pos]
+                confirmed_matches[n_description] = competitors[leader]
 
                 # update gate_matrix
                 gate_matrix[n_description, :] = False
-                gate_matrix[:, competitors[pos]] = False
+                gate_matrix[:, competitors[leader]] = False
 
                 # check if rest of the objects can be assigned
                 confirmed_matches, gate_matrix = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix,
                                                                              confirmed_matches)
+
+                # TODO if one none it's easy
+
                 if None in confirmed_matches:
                     confirmed_matches, gate_matrix = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix,
                                                                                  confirmed_matches)
@@ -183,7 +202,7 @@ def Assign(img_name, mentioned_blocks, objects):
             return confirmed_matches
 
         if None in confirmed_matches:
-            confirmed_matches, gate_matrix = FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches)
+            confirmed_matches = FindMissing(mentioned_blocks, objects, gate_matrix, confirmed_matches)
         else:
             return confirmed_matches
 
