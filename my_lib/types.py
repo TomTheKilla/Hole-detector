@@ -19,11 +19,16 @@ class GroupOfBlocks:
         self.window = window
         self.total_area = total_area
         self.n_holes = None
+        self.holes = None
         self.blocks = None
         self.description = None
         self.colour_masks = None
 
     def ColourArea(self, colour):
+
+        # cv.imshow('mask', self.colour_masks[colour.value])
+        # cv.imshow('img', self.img)
+        # cv.waitKey(0)
         hist = cv.calcHist([self.colour_masks[colour.value]], [0], None, [256], (0, 256), accumulate=False)
         colour_area = hist[255, 0]
         return colour_area

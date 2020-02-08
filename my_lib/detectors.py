@@ -82,6 +82,37 @@ def SimpleHoughCircles(img):
     else:
         return None
 
+def AdaptiveHoughCirlces(img):
+    gray_f = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    gray_f_blur = cv.GaussianBlur(gray_f, (9, 9), cv.BORDER_DEFAULT)
+    thresh = cv.adaptiveThreshold(gray_f_blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 21, 2)
+    kernel = np.ones((3, 3), np.uint8)
+    morph = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel, iterations=1)
+    img = morph
+
+    temp = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
+
+    p1 = 4
+    p2 = 9
+    mr = 21
+    MR = 28
+    dist = 70
+
+    circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, dist,
+                              param1=p1, param2=p2, minRadius=mr, maxRadius=MR)
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+
+        for i in circles[0, :]:
+            # draw the outer circle
+            cv.circle(temp, (i[0], i[1]), i[2], (0, 255, 0), 2)
+            # draw the center of the circle
+            cv.circle(temp, (i[0], i[1]), 2, (0, 255, 0), 3)
+            return circles, temp
+        else:
+            return None
+
+
 
 def CountColouredBlocks(img):
     img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
