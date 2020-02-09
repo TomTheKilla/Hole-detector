@@ -22,7 +22,7 @@ def showPicture(img, i):
 # 1. imgs
 # 2. input json
 # 3. output json
-            # TODO: handle / and \ in paths
+
 img_dir = sys.argv[1]
 input_dir = sys.argv[2]
 output_dir = sys.argv[3]
@@ -50,9 +50,9 @@ medianFrame = cv.imread('my_lib/background.jpg')
 # Iterate over every photo mentioned in input.json
 for img_name, mentioned_blocks in input_block_count.items():
 
-    # #TODO remve after tests!!!!
-    # if img_name != 'img_009':
-    #     continue
+    #TODO remve after tests!!!!
+    if img_name != 'img_002':
+        continue
 
 
     # Read image
@@ -75,7 +75,7 @@ for img_name, mentioned_blocks in input_block_count.items():
     time_describe = time.time()  # Time measurement
 
     # Assign objects from input json to detected objects
-    confirmed_matches = sorters.Assign(img_name, mentioned_blocks, objects)
+    confirmed_matches = sorters.Assign(img_name, img, mentioned_blocks, objects)
 
     time_assign = time.time()
 
@@ -88,7 +88,7 @@ for img_name, mentioned_blocks in input_block_count.items():
     if confirmed_matches is None:
         print(f'Zeroes for objects in {img_name}!')
         for i in range(len(mentioned_blocks)):
-            sorted_hole_count.append(0)    # TODO replace with something sensible
+            sorted_hole_count.append(15)
     else:
         for match in confirmed_matches:
             sorted_hole_count.append(objects[match].n_holes)
@@ -96,27 +96,11 @@ for img_name, mentioned_blocks in input_block_count.items():
     output_dict[img_name] = sorted_hole_count
     print(f'Finnished processing {img_name}.jpg!')
 
-    # TODO remove after tests
-    for obj in objects:
-        scale = 1/2
-        temp = obj.img.copy()
-        for i in obj.holes:
-            # draw the outer circle
-            cv.circle(temp, (i[0], i[1]), i[2], (0, 255, 0), 2)
-            # draw the center of the circle
-            cv.circle(temp, (i[0], i[1]), 2, (0, 255, 0), 3)
-
-        text = "Number of Circular Blobs: " + str(len(obj.holes))
-        cv.putText(temp, text, (20, 30),
-                   cv.FONT_HERSHEY_SIMPLEX, 1, (0, 100, 255), 2)
-        temp = cv.resize(temp, (0, 0), fx=scale, fy=scale)
-        cv.imshow('test', temp)
-        print(f'Description: {mentioned_blocks[obj.description]} \nHoles: {obj.n_holes}')
-        cv.waitKey(0)
 
 # write output json
 with open(output_dir, 'w+') as file:
     output = json.dump(output_dict, file, indent=4)
 
+# TODO remove
 with open('time_log.json', 'w+') as file:
     output = json.dump(frame_time, file, indent=4)

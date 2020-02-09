@@ -35,7 +35,6 @@ def ExtractObjectsFormFrame(img_name, test_img, medianFrame):
     extracted_objects = []
     for cont in contours:
         if cv.contourArea(cont) >= 30000:
-            
             shape = mask.copy()
             temp = test_img.copy()
             # cv.drawContours(shape, [cont], -1, (255), cv.FILLED)
@@ -58,7 +57,7 @@ def ExtractObjectsFormFrame(img_name, test_img, medianFrame):
             cut_object = temp[(window[1]):(window[1] + window[3]),
                          int(window[0]):int(window[0] + window[2]), :]
 
-            area = window[3]*window[2]
+            area = window[3] * window[2]
 
             obj = GroupOfBlocks(img_name, cut_object, box, window, area)
             extracted_objects.append(obj)
@@ -82,6 +81,7 @@ def SimpleHoughCircles(img):
     else:
         return None
 
+
 def AdaptiveHoughCirlces(img):
     gray_f = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     gray_f_blur = cv.GaussianBlur(gray_f, (9, 9), cv.BORDER_DEFAULT)
@@ -94,12 +94,12 @@ def AdaptiveHoughCirlces(img):
 
     p1 = 4
     p2 = 9
-    mr = 21
-    MR = 28
+    min_r = 21
+    max_r = 28
     dist = 70
 
     circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, dist,
-                              param1=p1, param2=p2, minRadius=mr, maxRadius=MR)
+                              param1=p1, param2=p2, minRadius=min_r, maxRadius=max_r)
     if circles is not None:
         circles = np.uint16(np.around(circles))
 
@@ -108,10 +108,9 @@ def AdaptiveHoughCirlces(img):
             cv.circle(temp, (i[0], i[1]), i[2], (0, 255, 0), 2)
             # draw the center of the circle
             cv.circle(temp, (i[0], i[1]), 2, (0, 255, 0), 3)
-            return circles, temp
-        else:
-            return None
-
+        return circles, temp
+    else:
+        return None
 
 
 def CountColouredBlocks(img):
