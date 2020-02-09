@@ -79,12 +79,7 @@ def AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirme
                     number_of_matches += 1
                     last_possible_match = input_n
 
-            if number_of_matches == 0 and confirmed_matches[input_n] is None:
-                # TODO: make possible for unmatched descriptions
-                raise Exception(f'No matches found for {input_n + 1}. object!')  # TODO handle exeption
-
-
-            elif number_of_matches == 1:
+            if number_of_matches == 1:
                 confirmed_matches[last_possible_match] = detected_n
                 objects[detected_n].description = last_possible_match
                 gate_matrix[last_possible_match, :] = False
@@ -153,21 +148,21 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
             target_colour = Colours(additional_colours_in_description[0])
             target_description = n_description
         else:
-            # Can't find solution    # TODO Pick colour that has the biggest difference in number of blocks
-            return confirmed_matches, gate_matrix
+            diff = [abs(i - j) for i, j in zip(n_of_blocks_in_description, n_of_blocks_in_competing_description)]
+            biggest_diff = 0
+            target_colour = None
+            for i, x in enumerate(diff):
+                if x > biggest_diff:
+                    target_colour = i
+                    biggest_diff = x
 
-        competitors_colours_present = []
-        # for competitor in competitors:
-        #     n_of_blocks_in_competitor = []
-        #     for colour in Colours:
-        #         n = int(objects[competitor].blocks[colour.name])
-        #         n_of_blocks_in_competitor.append(n)
-        #     blocks = [i for i, x in enumerate(n_of_blocks_in_competitor) if (x != 0)]
-        #     if blocks not in competitors_colours_present:
-        #         competitors_colours_present.append(blocks)
-        #
-        # if len(competitors_colours_present) == 1 and competitors_colours_present[0] == description_colours_present:
-        #     continue  # TODO: catch that at the end in case it happens every loop
+            if n_of_blocks_in_description[target_colour] > n_of_blocks_in_competing_description[target_colour]:
+                target_colour = Colours(target_colour)
+                target_description = n_description
+            else:
+                target_colour = Colours(target_colour)
+                [target_description] = [x for x in descriptions if x != n_description]
+
 
         leader = None
         top_area_ratio = 0.0

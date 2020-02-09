@@ -51,7 +51,7 @@ medianFrame = cv.imread('my_lib/background.jpg')
 for img_name, mentioned_blocks in input_block_count.items():
 
     #TODO remve after tests!!!!
-    if img_name != 'img_002':
+    if img_name != 'img_007':
         continue
 
 
