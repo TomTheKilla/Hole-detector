@@ -112,7 +112,7 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
 
     for competition, n_description in enumerate(not_assigned_descriptions):
         description = mentioned_blocks[n_description]
-        competitors = competing_objects[competition]  # TODO remove identical cometitions after
+        competitors = competing_objects[competition]
 
         # Find single competing description
         descriptions = possible_descriptions_for_objects[competitors[0]]
@@ -264,11 +264,15 @@ def Assign(img_name, img, mentioned_blocks, objects):
 
     if None in confirmed_matches:
         # Find all not assigned objects and descriptions
-        desc = [i for i, x in enumerate(confirmed_matches) if x is None]
-        objs = [x for x in range(len(mentioned_blocks)) if x not in confirmed_matches]
-        # assign them randomly
-        for i, x in enumerate(desc):
-            confirmed_matches[desc] = objs[i]
+        try:
+            desc = [i for i, x in enumerate(confirmed_matches) if x is None]
+            objs = [x for x in range(len(mentioned_blocks)) if x not in confirmed_matches]
+            # assign them randomly
+            for i, x in enumerate(desc):
+                confirmed_matches[desc] = objs[i]
+
+        except:
+            pass
 
     else:
         return confirmed_matches

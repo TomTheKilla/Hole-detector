@@ -75,7 +75,7 @@ for img_name, mentioned_blocks in input_block_count.items():
     # update_output_dict
     sorted_hole_count = []
     if confirmed_matches is None:
-        print(f'Zeroes for objects in {img_name}!')
+        print(f'Errors in {img_name}!')
         for i in range(len(mentioned_blocks)):
             sorted_hole_count.append(15)
     else:
