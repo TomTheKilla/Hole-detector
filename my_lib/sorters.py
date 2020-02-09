@@ -198,7 +198,7 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
                 return confirmed_matches
 
         else:
-            # TODO handle
+            # If leader is None it can't be decided
             pass
 
     return confirmed_matches, gate_matrix

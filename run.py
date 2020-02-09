@@ -50,14 +50,15 @@ medianFrame = cv.imread('my_lib/background.jpg')
 # Iterate over every photo mentioned in input.json
 for img_name, mentioned_blocks in input_block_count.items():
 
-    #TODO remve after tests!!!!
-    if img_name != 'img_007':
-        continue
+    # #TODO remve after tests!!!!
+    # if img_name != 'img_007':
+    #     continue
 
 
     # Read image
     img = cv.imread(f'{img_dir}/{img_name}.jpg')
 
+    # TODO alternative method for when background changes
     time_start = time.time()  # Time measurement
     objects = detectors.ExtractObjectsFormFrame(img_name, img, medianFrame)
     time_extract = time.time()  # Time measurement
