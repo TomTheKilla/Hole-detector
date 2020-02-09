@@ -9,15 +9,6 @@ from my_lib import detectors
 from my_lib import sorters
 from my_lib.types import GroupOfBlocks
 
-
-
-
-
-def showPicture(img, i):
-    tmp = cv.resize(img, (4608 // 8, 3456 // 8))
-    cv.imshow(f'test{i}', tmp)
-
-
 # read input arguments (directories
 # 1. imgs
 # 2. input json
@@ -50,17 +41,14 @@ medianFrame = cv.imread('my_lib/background.jpg')
 # Iterate over every photo mentioned in input.json
 for img_name, mentioned_blocks in input_block_count.items():
 
-    # #TODO remve after tests!!!!
     # if img_name != 'img_007':
     #     continue
-
 
     # Read image
     img = cv.imread(f'{img_dir}/{img_name}.jpg')
 
-    # TODO alternative method for when background changes
     time_start = time.time()  # Time measurement
-    objects = detectors.ExtractObjectsFormFrame(img_name, img, medianFrame)
+    objects = detectors.AlternativeExtractObjectsFromFrame(img_name, img)
     time_extract = time.time()  # Time measurement
 
     for obj in objects:
@@ -97,11 +85,10 @@ for img_name, mentioned_blocks in input_block_count.items():
     output_dict[img_name] = sorted_hole_count
     print(f'Finnished processing {img_name}.jpg!')
 
-
 # write output json
 with open(output_dir, 'w+') as file:
     output = json.dump(output_dict, file, indent=4)
 
-# TODO remove
-with open('time_log.json', 'w+') as file:
-    output = json.dump(frame_time, file, indent=4)
+
+# with open('time_log.json', 'w+') as file:
+#     output = json.dump(frame_time, file, indent=4)

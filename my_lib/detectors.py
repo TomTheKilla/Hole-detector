@@ -63,6 +63,50 @@ def ExtractObjectsFormFrame(img_name, test_img, medianFrame):
             extracted_objects.append(obj)
     return extracted_objects
 
+def AlternativeExtractObjectsFromFrame(img_name, img):
+    gray_f = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    gray_f_blur = cv.GaussianBlur(gray_f, (27, 27), cv.BORDER_DEFAULT)
+
+    thresh = cv.adaptiveThreshold(gray_f_blur, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 21, 2)
+
+    kernel = np.ones((3, 3), np.uint8)
+    morph = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel, iterations=1)
+    kernel = np.ones((25, 25), np.uint8)
+    morph = cv.dilate(morph, kernel, iterations=2)
+
+    contours, hierarchy = cv.findContours(morph, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+
+    mask = np.zeros(img.shape[:2])
+    extracted_objects = []
+    for cont in contours:
+        if cv.contourArea(cont) >= 30000:
+            shape = mask.copy()
+            temp = img.copy()
+            cv.drawContours(shape, [cont], -1, (255), cv.FILLED)
+
+            contours_poly = cv.approxPolyDP(cont, 3, True)
+
+            # Generate straight bbox and use it to cut the object out of the test_image
+            window = cv.boundingRect(contours_poly)
+
+            # Find rotated bbox to remove any potential fragments form other blocks
+            bbox = cv.minAreaRect(cont)
+            box = cv.boxPoints(bbox)
+            box = np.intp(box)
+            cv.drawContours(shape, [box], 0, (255), cv.FILLED)
+
+            # Mask unnecessary parts of the image
+            temp[shape == 0] = (0, 0, 0)
+
+            # Cut object form test_img with removed background
+            cut_object = temp[(window[1]):(window[1] + window[3]),
+                         int(window[0]):int(window[0] + window[2]), :]
+
+            area = window[3] * window[2]
+
+            obj = GroupOfBlocks(img_name, cut_object, box, window, area)
+            extracted_objects.append(obj)
+    return extracted_objects
 
 def SimpleHoughCircles(img):
     img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
@@ -79,7 +123,7 @@ def SimpleHoughCircles(img):
             cv.circle(temp, (i[0], i[1]), 2, (0, 255, 0), 3)
         return circles, temp
     else:
-        return None
+        return None, None
 
 
 def AdaptiveHoughCirlces(img):
@@ -110,7 +154,7 @@ def AdaptiveHoughCirlces(img):
             cv.circle(temp, (i[0], i[1]), 2, (0, 255, 0), 3)
         return circles, temp
     else:
-        return None
+        return None, None
 
 
 def CountColouredBlocks(img):

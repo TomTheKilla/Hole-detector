@@ -163,7 +163,6 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
                 target_colour = Colours(target_colour)
                 [target_description] = [x for x in descriptions if x != n_description]
 
-
         leader = None
         top_area_ratio = 0.0
         for pos, competitor in enumerate(competitors):
@@ -184,8 +183,6 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
             # update gate_matrix
             gate_matrix[target_description, :] = False
             gate_matrix[:, competitors[leader]] = False
-
-            # TODO if one none it should be straigh forward but the next function should do
 
             # check if rest of the objects can be assigned
             confirmed_matches, gate_matrix = AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix,
@@ -233,8 +230,19 @@ def Assign(img_name, img, mentioned_blocks, objects):
             objects.append(obj)
 
         else:
-            pass
-            # TODO meanshift
+            for i in range(len(mentioned_blocks) - len(objects)):
+                obj = GroupOfBlocks(img_name, temp, None, None, None)
+                blocks = {
+                    'red': 0,
+                    'blue': 0,
+                    'white': 0,
+                    'grey': 0,
+                    'yellow': 0,
+                }
+                obj.blocks = blocks
+                obj.n_holes = 15
+                objects.append(obj)
+
     elif len(mentioned_blocks) < len(objects):
         return None
 
