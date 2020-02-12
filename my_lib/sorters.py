@@ -6,7 +6,7 @@ from my_lib import detectors
 
 
 def CheckPossibilities(mentioned_blocks, objects):
-    gate_matrix = np.zeros((len(mentioned_blocks), len(mentioned_blocks)), bool)
+    gate_matrix = np.zeros((len(mentioned_blocks), len(objects)), bool)
 
     for input_n, input in enumerate(mentioned_blocks):
         for detected_n, detected in enumerate(objects):
@@ -51,12 +51,12 @@ def AssignObjectsToDescriptions(mentioned_blocks, objects, gate_matrix, confirme
                 were_changes_made = True
             else:
                 pass
-
-    if len(not_matched_descriptions) == 1:
-        descript = not_matched_descriptions[0]
-        [obj] = [n_obj for n_obj in range(len(objects)) if n_obj not in confirmed_matches]
-        confirmed_matches[descript] = obj
-        objects[obj].description = descript
+    # TODO: fix
+    # if len(not_matched_descriptions) == 1:
+    #     descript = not_matched_descriptions[0]
+    #     [obj] = [n_obj for n_obj in range(len(objects)) if n_obj not in confirmed_matches]
+    #     confirmed_matches[descript] = obj
+    #     objects[obj].description = descript
 
     return confirmed_matches, gate_matrix
 
@@ -87,11 +87,12 @@ def AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix, confirme
             else:
                 pass
 
-        if len(not_matched_objects) == 1:
-            obj = not_matched_objects[0]
-            [descript] = [i for i, x in enumerate(confirmed_matches) if x is None]
-            confirmed_matches[descript] = obj
-            objects[obj].description = descript
+        # # TODO fix
+        # if len(not_matched_objects) == 1:
+        #     obj = not_matched_objects[0]
+        #     [descript] = [i for i, x in enumerate(confirmed_matches) if x is None]
+        #     confirmed_matches[descript] = obj
+        #     objects[obj].description = descript
 
     return confirmed_matches, gate_matrix
 
@@ -143,7 +144,11 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
         # Select colour to look for in images that would differentiate them
         if len(missing_colours_from_description) != 0:
             target_colour = Colours(missing_colours_from_description[0])
-            [target_description] = [x for x in descriptions if x != n_description]
+            x = [x for x in descriptions if x != n_description]
+            if len(x) == 1:
+                target_description = x[0]
+            else:
+                return confirmed_matches, gate_matrix
         elif len(additional_colours_in_description) != 0:
             target_colour = Colours(additional_colours_in_description[0])
             target_description = n_description
@@ -156,12 +161,18 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
                     target_colour = i
                     biggest_diff = x
 
+            if target_colour is None:
+                target_colour = 0
             if n_of_blocks_in_description[target_colour] > n_of_blocks_in_competing_description[target_colour]:
                 target_colour = Colours(target_colour)
                 target_description = n_description
             else:
                 target_colour = Colours(target_colour)
-                [target_description] = [x for x in descriptions if x != n_description]
+                x = [x for x in descriptions if x != n_description]
+                if len(x) == 1:
+                    target_description = x[0]
+                else:
+                    return confirmed_matches, gate_matrix
 
         leader = None
         top_area_ratio = 0.0
@@ -192,7 +203,7 @@ def DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
                 confirmed_matches, gate_matrix = AssignDescriptionsToObjects(mentioned_blocks, objects, gate_matrix,
                                                                              confirmed_matches)
             else:
-                return confirmed_matches
+                return confirmed_matches, gate_matrix
 
         else:
             # If leader is None it can't be decided
@@ -223,10 +234,14 @@ def Assign(img_name, img, mentioned_blocks, objects):
                 'yellow': 0,
             }
 
-            obj = GroupOfBlocks(img_name, temp, None, None, None)
+            obj = GroupOfBlocks(img_name, temp, None, None, 1)
             obj.blocks = blocks
-            obj.holes = circles[0, :]
-            obj.n_holes = len(circles[0, :])
+            if circles is not None:
+                obj.holes = circles[0, :]
+                obj.n_holes = len(circles[0, :])
+            else:
+                obj.holes = [[0, 0, 0]] * 15
+                obj.n_holes = 15
             objects.append(obj)
 
         else:
@@ -244,7 +259,8 @@ def Assign(img_name, img, mentioned_blocks, objects):
                 objects.append(obj)
 
     elif len(mentioned_blocks) < len(objects):
-        return None
+        pass
+        # return None
 
     gate_matrix = CheckPossibilities(mentioned_blocks, objects)
 
@@ -257,9 +273,9 @@ def Assign(img_name, img, mentioned_blocks, objects):
     else:
         return confirmed_matches
 
-    if None in confirmed_matches:
-        confirmed_matches = DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
-    else:
+    if None in confirmed_matches and (True in gate_matrix):
+        confirmed_matches, gate_matrix = DecideBasedOnArea(mentioned_blocks, objects, gate_matrix, confirmed_matches)
+    elif None not in confirmed_matches:
         return confirmed_matches
 
     if None in confirmed_matches:
@@ -269,10 +285,14 @@ def Assign(img_name, img, mentioned_blocks, objects):
             objs = [x for x in range(len(mentioned_blocks)) if x not in confirmed_matches]
             # assign them randomly
             for i, x in enumerate(desc):
-                confirmed_matches[desc] = objs[i]
-
+                confirmed_matches[x] = objs[i]
+            return confirmed_matches
         except:
-            pass
+            for i, x in enumerate(confirmed_matches):
+                if x is None:
+                    confirmed_matches[i] = 0
+
+            return confirmed_matches
 
     else:
         return confirmed_matches

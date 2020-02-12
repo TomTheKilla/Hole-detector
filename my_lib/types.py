@@ -29,6 +29,9 @@ class GroupOfBlocks:
         # cv.imshow('mask', self.colour_masks[colour.value])
         # cv.imshow('img', self.img)
         # cv.waitKey(0)
-        hist = cv.calcHist([self.colour_masks[colour.value]], [0], None, [256], (0, 256), accumulate=False)
-        colour_area = hist[255, 0]
-        return colour_area
+        if self.colour_masks is not None:
+            hist = cv.calcHist([self.colour_masks[colour.value]], [0], None, [256], (0, 256), accumulate=False)
+            colour_area = hist[255, 0]
+            return colour_area
+        else:
+            return 0
